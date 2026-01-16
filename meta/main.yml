@@ -15,3 +15,7 @@ galaxy_info:
         - bookworm
 
 dependencies: []
+
+collections:
+  - community.proxysql
+  - community.mysql
