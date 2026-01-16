@@ -116,6 +116,35 @@ proxysql_query_rules:
     comment: "3327 -> HG10 writer (read-your-writes)"
 ```
 
+## Extra tuning: MySQL global variables (`mysql-*`)
+
+The role can optionally apply additional **ProxySQL MySQL global variables** (the `mysql-*` variables in `global_variables`).
+This is useful for standardizing behavior across environments (timeouts, ping intervals, version string, digest behavior, etc).
+
+### How it works
+
+- Variables are applied **only if** `proxysql3_mysql_global_variables` is non-empty.
+- Each entry is set with `load_to_runtime: true` and `save_to_disk: true`.
+- Restart-only variables are **blocked** in this mechanism:
+  - `mysql-interfaces` (managed separately by the role with restart)
+  - `mysql-threads`
+  - `mysql-stacksize`
+
+### Configuration example
+
+```yaml
+proxysql3_mysql_global_variables:
+  mysql-server_version: "5.7.44"
+  mysql-connect_timeout_client: "10000"
+  mysql-connect_timeout_server: "3000"
+  mysql-ping_interval_server_msec: "120000"
+  mysql-ping_timeout_server: "500"
+  mysql-shun_on_failures: "5"
+  mysql-shun_recovery_time_sec: "10"
+  mysql-query_rules_fast_routing_algorithm: "1"
+  mysql-parse_failure_logs_digest: "true"
+```
+
 ### Validation
 
 ```yaml

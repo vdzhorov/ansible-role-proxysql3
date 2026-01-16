@@ -29,6 +29,10 @@
   ansible.builtin.import_tasks: query_rules.yml
   tags: [proxysql3, proxysql3_query_rules]
 
+- name: Configure general ProxySQL tuning variables
+  ansible.builtin.import_tasks: general_tuning.yml
+  tags: [proxysql3, proxysql3_general_tuning]
+
 - name: Validate ProxySQL configuration
   ansible.builtin.import_tasks: validate.yml
   when: proxysql3_run_validation | bool

@@ -1,0 +1,29 @@
+---
+
+- name: Prevent setting restart-only variables via tuning dict
+  ansible.builtin.assert:
+    that:
+      - "'mysql-interfaces' not in (proxysql3_mysql_global_variables | default({}))"
+      - "'mysql-threads' not in (proxysql3_mysql_global_variables | default({}))"
+      - "'mysql-stacksize' not in (proxysql3_mysql_global_variables | default({}))"
+    fail_msg: >-
+      proxysql3_mysql_global_variables must not include mysql-interfaces/mysql-threads/mysql-stacksize.
+      mysql-interfaces is managed by the role (with restart). mysql-threads/mysql-stacksize require restart-only handling.
+  when: proxysql3_mysql_global_variables is mapping
+
+- name: Apply extra mysql global variables (runtime + disk)
+  community.proxysql.proxysql_global_variables:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    variable: "{{ item.key }}"
+    value: "{{ item.value | string }}"
+    load_to_runtime: true
+    save_to_disk: true
+  loop: "{{ (proxysql3_mysql_global_variables | default({})) | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - proxysql3_mysql_global_variables is mapping
+    - proxysql3_mysql_global_variables | length > 0

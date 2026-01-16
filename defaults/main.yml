@@ -66,3 +66,15 @@ proxysql_query_rules: []
 proxysql3_run_validation: true
 # Dynamic: derived at runtime from proxysql_mysql_interfaces
 proxysql3_validate_ports_regex: ""
+
+# Extra tuning of mysql-* global variables (applied when non-empty)
+proxysql3_mysql_global_variables: {}
+# Example:
+# proxysql3_mysql_global_variables:
+#   mysql-server_version: "5.7.44"
+#   mysql-connect_timeout_client: "10000"
+#   mysql-connect_timeout_server: "3000"
+#   mysql-ping_interval_server_msec: "120000"
+#   mysql-ping_timeout_server: "500"
+#   mysql-query_rules_fast_routing_algorithm: "1"
+#   mysql-parse_failure_logs_digest: "true"
