@@ -8,8 +8,6 @@
       - apt-transport-https
       - ca-certificates
       - gnupg
-      - python3-pymysql
-      - python3-mysqldb
     state: present
     update_cache: true
 
