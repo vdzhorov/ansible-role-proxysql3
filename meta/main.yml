@@ -5,7 +5,7 @@ galaxy_info:
   author: Valentin Dzhorov
   description: Install and configure ProxySQL 3 (interfaces, servers, optional galera, users, query rules)
   license: MIT
-  min_ansible_version: "2.14"
+  min_ansible_version: "2.18"
   platforms:
     - name: Ubuntu
       versions:
