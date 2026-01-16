@@ -1,13 +1,21 @@
 ---
 
+- name: Install preflight dependencies
+  ansible.builtin.import_tasks: preflight.yml
+  tags: [proxysql3, proxysql3_preflight]
+
 - name: Install ProxySQL 3
   ansible.builtin.import_tasks: install.yml
   when: proxysql3_manage_install | bool
   tags: [proxysql3, proxysql3_install]
 
-- name: Configure general ProxySQL settings
-  ansible.builtin.import_tasks: config.yml
-  tags: [proxysql3, proxysql3_config]
+- name: Configure ProxySQL interfaces
+  ansible.builtin.import_tasks: interfaces.yml
+  tags: [proxysql3, proxysql3_interfaces]
+
+- name: Configure monitor ProxySQL settings
+  ansible.builtin.import_tasks: monitor.yml
+  tags: [proxysql3, proxysql3_monitor]
 
 - name: Configure backend servers and (optional) Galera hostgroups
   ansible.builtin.import_tasks: servers.yml

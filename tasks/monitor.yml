@@ -1,0 +1,36 @@
+---
+
+- name: Wait for ProxySQL admin interface TCP port to be reachable
+  ansible.builtin.wait_for:
+    host: "{{ proxysql_admin_host | default('127.0.0.1') }}"
+    port: "{{ proxysql_admin_port | default(6032) }}"
+    state: started
+    timeout: 60
+
+- name: Wait until ProxySQL admin interface accepts queries
+  community.mysql.mysql_query:
+    login_host: "{{ proxysql_admin_host | default('127.0.0.1') }}"
+    login_port: "{{ proxysql_admin_port | default(6032) }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    query: "SELECT 1"
+  register: proxysql_admin_ping
+  retries: 30
+  delay: 2
+  until: proxysql_admin_ping is succeeded
+
+- name: Configure mysql monitor credentials (runtime + disk)
+  community.proxysql.proxysql_global_variables:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    variable: "{{ item.variable }}"
+    value: "{{ item.value }}"
+    save_to_disk: true
+    load_to_runtime: true
+  loop:
+    - { variable: "mysql-monitor_username", value: "{{ proxysql_monitor_username }}" }
+    - { variable: "mysql-monitor_password", value: "{{ proxysql_monitor_password }}" }
+  when: proxysql_monitor_password | length > 0
+  no_log: false

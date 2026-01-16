@@ -23,21 +23,5 @@
   when: (proxysql3_current_interfaces.query_result[0].variable_value | default('')) != proxysql_mysql_interfaces
   notify: Restart proxysql
 
-- name: Configure mysql monitor credentials (runtime + disk)
-  community.proxysql.proxysql_global_variables:
-    login_host: "{{ proxysql_admin_host }}"
-    login_port: "{{ proxysql_admin_port }}"
-    login_user: "{{ proxysql_admin_user }}"
-    login_password: "{{ proxysql_admin_password }}"
-    variable: "{{ item.variable }}"
-    value: "{{ item.value }}"
-    save_to_disk: true
-    load_to_runtime: true
-  loop:
-    - { variable: "mysql-monitor_username", value: "{{ proxysql_monitor_username }}" }
-    - { variable: "mysql-monitor_password", value: "{{ proxysql_monitor_password }}" }
-  when: proxysql_monitor_password | length > 0
-  no_log: true
-
 - name: Flush handlers (apply interface change if needed)
   ansible.builtin.meta: flush_handlers
