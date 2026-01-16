@@ -1,0 +1,27 @@
+---
+
+- name: Install ProxySQL 3
+  ansible.builtin.import_tasks: install.yml
+  when: proxysql3_manage_install | bool
+  tags: [proxysql3, proxysql3_install]
+
+- name: Configure general ProxySQL settings
+  ansible.builtin.import_tasks: config.yml
+  tags: [proxysql3, proxysql3_config]
+
+- name: Configure backend servers and (optional) Galera hostgroups
+  ansible.builtin.import_tasks: servers.yml
+  tags: [proxysql3, proxysql3_servers]
+
+- name: Configure ProxySQL users
+  ansible.builtin.import_tasks: users.yml
+  tags: [proxysql3, proxysql3_users]
+
+- name: Configure ProxySQL query rules
+  ansible.builtin.import_tasks: query_rules.yml
+  tags: [proxysql3, proxysql3_query_rules]
+
+- name: Validate ProxySQL configuration
+  ansible.builtin.import_tasks: validate.yml
+  when: proxysql3_run_validation | bool
+  tags: [proxysql3, proxysql3_validate]

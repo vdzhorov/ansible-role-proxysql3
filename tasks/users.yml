@@ -1,0 +1,25 @@
+---
+
+- name: Create/update ProxySQL mysql_users (frontend auth)
+  community.proxysql.proxysql_mysql_users:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    username: "{{ item.name }}"
+    password: "{{ item.pass }}"
+    frontend: true
+    backend: false
+    active: "{{ item.active | default(true) }}"
+    default_hostgroup: "{{ item.default_hostgroup | default(10) }}"
+    transaction_persistent: "{{ item.transaction_persistent | default(false) }}"
+    fast_forward: "{{ item.fast_forward | default(false) }}"
+    max_connections: "{{ item.max_connections | default(10000) }}"
+    comment: "{{ item.comment | default('') }}"
+    state: present
+    save_to_disk: true
+    load_to_runtime: true
+  loop: "{{ proxysql_mysql_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true

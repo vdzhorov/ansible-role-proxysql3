@@ -1,0 +1,43 @@
+---
+
+- name: Add/update backend servers
+  community.proxysql.proxysql_backend_servers:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    hostgroup_id: "{{ item.hostgroup_id }}"
+    hostname: "{{ item.hostname }}"
+    port: "{{ item.port }}"
+    weight: "{{ item.weight | default(100) }}"
+    max_connections: "{{ item.max_connections | default(1000) }}"
+    comment: "{{ item.comment | default('') }}"
+    state: present
+    save_to_disk: true
+    load_to_runtime: true
+  loop: "{{ proxysql_backend_servers }}"
+  loop_control:
+    label: "HG{{ item.hostgroup_id }} {{ item.hostname }}:{{ item.port }}"
+
+- name: Configure Galera hostgroups (optional)
+  community.proxysql.proxysql_galera_hostgroups:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    writer_hostgroup: "{{ proxysql_galera_hostgroup.writer_hostgroup }}"
+    backup_writer_hostgroup: "{{ proxysql_galera_hostgroup.backup_writer_hostgroup }}"
+    reader_hostgroup: "{{ proxysql_galera_hostgroup.reader_hostgroup }}"
+    offline_hostgroup: "{{ proxysql_galera_hostgroup.offline_hostgroup }}"
+    active: "{{ proxysql_galera_hostgroup.active | default(1) }}"
+    max_writers: "{{ proxysql_galera_hostgroup.max_writers | default(1) }}"
+    writer_is_also_reader: "{{ proxysql_galera_hostgroup.writer_is_also_reader | default(1) }}"
+    max_transactions_behind: "{{ proxysql_galera_hostgroup.max_transactions_behind | default(100) }}"
+    comment: "{{ proxysql_galera_hostgroup.comment | default('') }}"
+    state: present
+    save_to_disk: true
+    load_to_runtime: true
+  when:
+    - proxysql3_enable_galera | bool
+    - proxysql_galera_hostgroup is mapping
+    - proxysql_galera_hostgroup | length > 0

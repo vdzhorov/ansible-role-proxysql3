@@ -1,0 +1,21 @@
+---
+
+- name: Create/update query rules
+  community.proxysql.proxysql_query_rules:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    rule_id: "{{ item.rule_id }}"
+    active: "{{ item.active | default(true) }}"
+    proxy_port: "{{ item.proxy_port }}"
+    match_pattern: "{{ item.match_pattern }}"
+    destination_hostgroup: "{{ item.destination_hostgroup }}"
+    apply: "{{ item.apply | default(true) }}"
+    comment: "{{ item.comment | default('') }}"
+    load_to_runtime: true
+    save_to_disk: true
+    state: present
+  loop: "{{ proxysql_query_rules }}"
+  loop_control:
+    label: "rule_id={{ item.rule_id }} port={{ item.proxy_port }} -> HG{{ item.destination_hostgroup }}"

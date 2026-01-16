@@ -1,0 +1,61 @@
+---
+
+- name: Install dependencies for apt repo + python mysql drivers
+  ansible.builtin.apt:
+    name:
+      - lsb-release
+      - wget
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - python3-pymysql
+      - python3-mysqldb
+    state: present
+    update_cache: true
+
+# Load OS/release-specific repo settings from role vars/
+- name: Load ProxySQL repo variables for this OS/release
+  ansible.builtin.include_vars:
+    file: "{{ item }}"
+  vars:
+    _candidates:
+      - "{{ role_path }}/vars/{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml"
+      - "{{ role_path }}/vars/{{ ansible_os_family }}-{{ ansible_distribution_release }}.yml"
+  loop: "{{ _candidates }}"
+  when: item is file
+  register: proxysql3_repo_vars_loaded
+
+- name: Fail if OS/release is unsupported by proxysql3 role
+  ansible.builtin.fail:
+    msg: >-
+      proxysql3 role: unsupported OS/release: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      (release={{ ansible_distribution_release }}). Supported: Ubuntu 24.04 (noble), Debian 12 (bookworm).
+      Add a vars file under roles/proxysql3/vars/ for this release to enable it.
+  when:
+    - proxysql3_repo_vars_loaded is not defined
+      or (proxysql3_repo_vars_loaded.results | selectattr('skipped', 'defined') | list | length) == (proxysql3_repo_vars_loaded.results | length)
+    - proxysql3_repo_key_url is not defined or proxysql3_apt_repo is not defined
+
+- name: Add ProxySQL 3.0.x repo keyring (dynamic)
+  ansible.builtin.get_url:
+    url: "{{ proxysql3_repo_key_url }}"
+    dest: "{{ proxysql3_repo_key_dest }}"
+    mode: "0644"
+
+- name: Add ProxySQL 3.0.x apt repo (dynamic)
+  ansible.builtin.apt_repository:
+    repo: "{{ proxysql3_apt_repo }}"
+    filename: "{{ proxysql3_apt_repo_filename | default('proxysql') }}"
+    state: present
+
+- name: Install ProxySQL package
+  ansible.builtin.apt:
+    name: proxysql
+    state: present
+    update_cache: true
+
+- name: Enable and start ProxySQL
+  ansible.builtin.systemd:
+    name: proxysql
+    enabled: true
+    state: started

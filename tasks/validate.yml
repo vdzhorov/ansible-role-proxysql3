@@ -1,0 +1,117 @@
+---
+
+- name: Derive ports list from proxysql_mysql_interfaces (no backslashes)
+  ansible.builtin.set_fact:
+    proxysql3_validate_ports_list: >-
+      {{
+        (proxysql_mysql_interfaces | default(''))
+        | regex_findall(':[0-9]+')
+        | map('regex_replace', ':', '')
+        | unique
+        | list
+      }}
+
+- name: Fail if no ports could be derived from proxysql_mysql_interfaces
+  ansible.builtin.fail:
+    msg: >-
+      proxysql3: could not derive any TCP ports from proxysql_mysql_interfaces='{{ proxysql_mysql_interfaces | default('') }}'.
+      Expected format like: '0.0.0.0:3326;0.0.0.0:3327'
+  when: proxysql3_validate_ports_list | length == 0
+
+- name: Build ports regex for validation
+  ansible.builtin.set_fact:
+    proxysql3_validate_ports_regex: "{{ proxysql3_validate_ports_list | join('|') }}"
+
+- name: Check listening ports
+  ansible.builtin.shell: "ss -lntp | egrep '{{ proxysql3_validate_ports_regex }}' || true"
+  register: proxysql3_ss_out
+  changed_when: false
+
+- name: Show ports check
+  ansible.builtin.debug:
+    var: proxysql3_ss_out.stdout_lines
+
+- name: Validate runtime mysql servers
+  community.mysql.mysql_query:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    query: |
+      SELECT hostgroup_id, hostname, port, status
+      FROM runtime_mysql_servers
+      ORDER BY hostgroup_id, hostname;
+  register: proxysql3_runtime_servers
+  changed_when: false
+
+- name: Show runtime mysql servers
+  ansible.builtin.debug:
+    var: proxysql3_runtime_servers.query_result
+
+- name: Show runtime query rules
+  community.mysql.mysql_query:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    query: |
+      SELECT rule_id, active, proxy_port, match_pattern, destination_hostgroup, apply, comment
+      FROM runtime_mysql_query_rules
+      ORDER BY rule_id;
+  register: proxysql3_runtime_rules
+  changed_when: false
+
+- name: Show runtime query rules
+  ansible.builtin.debug:
+    var: proxysql3_runtime_rules.query_result
+
+- name: Show Galera hostgroups configuration (only if enabled)
+  community.mysql.mysql_query:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    query: |
+      SELECT writer_hostgroup, backup_writer_hostgroup, reader_hostgroup, offline_hostgroup,
+             active, max_writers, writer_is_also_reader, max_transactions_behind, comment
+      FROM mysql_galera_hostgroups
+      ORDER BY writer_hostgroup, reader_hostgroup;
+  register: proxysql3_galera_cfg
+  changed_when: false
+  when: proxysql3_enable_galera | bool
+
+- name: Show Galera hostgroups configuration
+  ansible.builtin.debug:
+    var: proxysql3_galera_cfg.query_result
+  when: proxysql3_enable_galera | bool
+
+- name: Show runtime servers split by hostgroup (Galera view)
+  community.mysql.mysql_query:
+    login_host: "{{ proxysql_admin_host }}"
+    login_port: "{{ proxysql_admin_port }}"
+    login_user: "{{ proxysql_admin_user }}"
+    login_password: "{{ proxysql_admin_password }}"
+    query: |
+      SELECT hostgroup_id, hostname, port, status, weight, comment
+      FROM runtime_mysql_servers
+      WHERE hostgroup_id IN (
+        {{ proxysql_galera_hostgroup.writer_hostgroup | default(10) }},
+        {{ proxysql_galera_hostgroup.backup_writer_hostgroup | default(11) }},
+        {{ proxysql_galera_hostgroup.reader_hostgroup | default(20) }},
+        {{ proxysql_galera_hostgroup.offline_hostgroup | default(30) }}
+      )
+      ORDER BY hostgroup_id, hostname;
+  register: proxysql3_galera_runtime
+  changed_when: false
+  when:
+    - proxysql3_enable_galera | bool
+    - proxysql_galera_hostgroup is mapping
+    - proxysql_galera_hostgroup | length > 0
+
+- name: Show runtime Galera-related servers
+  ansible.builtin.debug:
+    var: proxysql3_galera_runtime.query_result
+  when:
+    - proxysql3_enable_galera | bool
+    - proxysql_galera_hostgroup is mapping
+    - proxysql_galera_hostgroup | length > 0
