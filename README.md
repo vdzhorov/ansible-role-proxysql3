@@ -21,15 +21,15 @@ Install:
 ansible-galaxy collection install community.proxysql community.mysql
 ```
 
-### Notes / Behavior
+## Notes / Behavior
 
 - mysql-interfaces is written to disk and requires a ProxySQL restart. The role restarts only when the value changes (read -> compare -> set -> notify handler).
 - Galera config is optional and controlled via proxysql3_enable_galera.
 - Validation ports are derived automatically from proxysql_mysql_interfaces.
 
-### Variables
+## Variables
 
-#### Admin endpoint
+### Admin endpoint
 
 ```yaml
 proxysql_admin_host: "127.0.0.1"
@@ -38,7 +38,7 @@ proxysql_admin_user: "admin"
 proxysql_admin_password: "{{ vault_proxysql_admin_password }}"
 ```
 
-#### Interfaces (multi-port support)
+### Interfaces (multi-port support)
 
 ```yaml
 proxysql_mysql_interfaces: "0.0.0.0:6033"
@@ -46,14 +46,14 @@ proxysql_mysql_interfaces: "0.0.0.0:6033"
 
 If you want multiple interfaces, separate them by semicolon, E.g. "0.0.0.0:6033;0.0.0.0:6034".
 
-#### Monitor credentials
+### Monitor credentials
 
 ```yaml
 proxysql_monitor_username: "proxysql_monitor"
 proxysql_monitor_password: "PASSWORD" # Change me.
 ```
 
-#### Backends
+### Backends
 
 ```yaml
 proxysql_backend_servers:
@@ -71,7 +71,7 @@ proxysql_backend_servers:
     comment: "percona-server3"
 ```
 
-#### Galera (optional)
+### Galera (optional)
 
 ```yaml
 proxysql3_enable_galera: true
@@ -84,7 +84,7 @@ proxysql_galera_hostgroup:
   comment: "PXC main cluster"
 ```
 
-#### Frontend users (ProxySQL)
+### Frontend users (ProxySQL)
 
 ```yaml
 proxysql_mysql_users:
@@ -95,7 +95,7 @@ proxysql_mysql_users:
     comment: "App user via ProxySQL"
 ```
 
-#### Query rules (per port)
+### Query rules (per port)
 
 ```yaml
 proxysql_query_rules:
@@ -116,14 +116,14 @@ proxysql_query_rules:
     comment: "3327 -> HG10 writer (read-your-writes)"
 ```
 
-#### Validation
+### Validation
 
 ```yaml
 proxysql3_run_validation: true
 # ports regex is derived automatically from proxysql_mysql_interfaces
 ```
 
-### Example Playbook
+## Example Playbook
 
 ```yaml
 - name: ProxySQL 3 on internal LB
@@ -133,7 +133,7 @@ proxysql3_run_validation: true
     - role: vdzhorov.proxysql3
 ```
 
-### Run only a part (tags)
+## Run only a part (tags)
 
 ```bash
 ansible-playbook -i inventory playbooks/proxysql.yml --tags proxysql3_install
@@ -144,7 +144,7 @@ ansible-playbook -i inventory playbooks/proxysql.yml --tags proxysql3_query_rule
 ansible-playbook -i inventory playbooks/proxysql.yml --tags proxysql3_validate
 ```
 
-### Example minimal vars
+## Example minimal vars
 
 ```yaml
 ---
