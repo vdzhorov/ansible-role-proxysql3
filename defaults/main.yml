@@ -1,0 +1,68 @@
+---
+
+# Whether to install/manage ProxySQL 3 package. Otherwise config only.
+proxysql3_manage_install: true
+
+# ProxySQL admin interface
+proxysql_admin_host: "127.0.0.1"
+proxysql_admin_port: 6032
+proxysql_admin_user: "admin"
+proxysql_admin_password: "admin"
+
+# ProxySQL client interfaces (semicolon-separated). E.g. "0.0.0.0:6033;0.0.0.0:6034"
+proxysql_mysql_interfaces: "0.0.0.0:6033"
+
+# Monitor creds used by ProxySQL to connect to backends
+proxysql_monitor_username: "proxysql_monitor"
+proxysql_monitor_password: ""
+
+# Backend servers list
+proxysql_backend_servers: []
+# Example item:
+# - hostgroup_id: 10
+#   hostname: "192.168.50.10"
+#   port: 3306
+#   weight: 100
+#   max_connections: 1000
+#   comment: "percona-server1"
+
+# Galera integration (optional)
+proxysql3_enable_galera: false
+proxysql_galera_hostgroup: {}
+# Example:
+# writer_hostgroup: 10
+# backup_writer_hostgroup: 11
+# reader_hostgroup: 20
+# offline_hostgroup: 30
+# active: 1
+# max_writers: 1
+# writer_is_also_reader: 1
+# max_transactions_behind: 100
+# comment: "PXC main cluster"
+
+# ProxySQL mysql_users (frontend auth)
+proxysql_mysql_users: []
+# Example:
+# - name: appuser
+#   pass: "secret"
+#   default_hostgroup: 10
+#   transaction_persistent: true
+#   active: true
+#   max_connections: 10000
+#   comment: "App user via ProxySQL"
+
+# Query rules
+proxysql_query_rules: []
+# Example:
+# - rule_id: 10
+#   active: true
+#   proxy_port: 3326
+#   match_pattern: ".*"
+#   destination_hostgroup: 10
+#   apply: true
+#   comment: "3326 -> HG10 writer"
+
+# Validation
+proxysql3_run_validation: true
+# Dynamic: derived at runtime from proxysql_mysql_interfaces
+proxysql3_validate_ports_regex: ""
