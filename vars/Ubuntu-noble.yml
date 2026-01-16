@@ -1,0 +1,9 @@
+---
+
+proxysql3_repo_key_url: "https://repo.proxysql.com/ProxySQL/proxysql-3.0.x/repo_pub_key.gpg"
+proxysql3_repo_key_dest: "/usr/share/keyrings/proxysql-3.0.x-keyring.gpg"
+
+proxysql3_apt_repo_filename: "proxysql"
+proxysql3_apt_repo: >-
+  deb [signed-by={{ proxysql3_repo_key_dest }}]
+  https://repo.proxysql.com/ProxySQL/proxysql-3.0.x/noble/ ./
